@@ -124,15 +124,16 @@ minimax(Col, Board, NewBoard, Move) :-
   player_opponent(Col, Board, Player, Opponent),
   valid_moves(Player, Opponent, ValidM),
   make_all_moves(Col, Player, Opponent, ValidM, MadeM),
-  valid_moves_2(MadeM, ValidM2),
+  valid_moves_2(Col, MadeM, ValidM2),
   make_all_moves_2(Col, Player, Opponent, ValidM2, MadeM2),
   mm_get_move_2(Col, MadeM2, Move),
   gen_new_board(Col, Move, Player, Opponent, NewBoard).
 
-mm_get_move_2(Col, [[Vm1, NextM] | Ms], Move) :-
-  findall((Vm1, N), mm_get_move(Col, NextM, ([], 64), (_, N)),
-           IndexM),
-  get_max(IndexM, Move).
+mm_get_move_2(Col, ValidMs, Move) :-
+  findall((Vm1, N), (member([Vm1, NextM], ValidMs),
+                     mm_get_move(Col, NextM, ([], 64), (_, N))),
+                     IndexM),
+  get_max(IndexM, ([], -64), Move).
 
 get_max([], (M, _), M).
 get_max([(Mv, MvN) | Moves], (M, N), Move) :-
@@ -145,23 +146,24 @@ mm_get_move(Col, [[ValidM, P1, P2] | ValidMs], (BestM, N), FinalM) :-
   length(P1, LenP1),
   length(P2, LenP2),
   (Col == b ->
-    New is LenP2 - LenP1;
-    New is LenP1 - LenP2),
+    New is LenP1 - LenP2;
+    New is LenP2 - LenP1),
   (New < N ->
     mm_get_move(Col, ValidMs, (ValidM, New), FinalM);
     mm_get_move(Col, ValidMs, (BestM, N), FinalM)).
 
 valid_moves_2(Col, MadeM, ValidM) :-
   findall([Vm1, Vm2, CP1, CO1], 
-         (member([Vm1, CP1, CO1], ValidM),
+         (member([Vm1, CP1, CO1], MadeM),
           player_opponent(Col, [CP1, CO1], Player, Opponent),
           valid_moves(Opponent, Player, Vm2)), ValidM).
 
 make_all_moves_2(Col, P1, P2, ValidM, MadeM) :-
   findall([Vm1, Level2],
          (member([Vm1, Vm2, CP1, OP1], ValidM),
-          player_opponent(Col, [CP1, CO1], Player, Opponent),
-          make_all_moves(Col, Opponent, Player, Vm2, Level2)), 
+          player_opponent(Col, [r, b], NCol, _),
+          player_opponent(NCol, [P1, P2], Player, Opponent),
+          make_all_moves(NCol, Player, Opponent, Vm2, Level2)), 
           MadeM).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
