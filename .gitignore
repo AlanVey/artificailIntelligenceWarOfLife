@@ -1,2 +1,4 @@
+*.swp
 *.pdf
 war_of_life.pl
+.DS_Store
